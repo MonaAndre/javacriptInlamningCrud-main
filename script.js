@@ -57,7 +57,7 @@ const onClickPlayer = function (event) {
     const htmlElementetSomViHarKlickatPa = event.target
     console.log(htmlElementetSomViHarKlickatPa.dataset.stefansplayerid)
     const playerId = parseInt(htmlElementetSomViHarKlickatPa.dataset.stefansplayerid);
-    const player = players.find(p => p.id ===playerId )
+    const player = players.find(p => p.id === playerId)
     playerName.value = player.name
     jersey.value = player.jersey
     position.value = player.position
@@ -87,7 +87,7 @@ closeDialog.addEventListener("click", async (ev) => {
         method = "POST"
     }
 
-    let response = await fetch("http://localhost:3000/api/players", {
+    let response = await fetch(url, {
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
@@ -97,8 +97,7 @@ closeDialog.addEventListener("click", async (ev) => {
     })
     console.log(response);
 
-    let json = await response.json()
-
+    // let json = await response.json()
     players = await fetchPlayers()
     updateTable()
     MicroModal.close('modal-1');
