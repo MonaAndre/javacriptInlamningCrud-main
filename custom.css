@@ -630,3 +630,9 @@
   display:flex;
   justify-content: space-between;
 }
+
+.error{
+  display: none;
+  color: red;
+  margin-bottom: 15px;
+}

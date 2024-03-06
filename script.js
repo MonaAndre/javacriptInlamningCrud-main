@@ -1,5 +1,4 @@
 
-
 const allPlayersTBody = document.querySelector("#allPlayers tbody")
 const searchPlayer = document.getElementById("searchPlayer")
 const btnAdd = document.getElementById("btnAdd")
@@ -14,9 +13,11 @@ function Player(id, name, jersey, team, position) {
     this.position = position
     this.visible = true
     this.matches = function (searchFor) {
-        return this.name.toLowerCase().includes(searchFor) ||
+        if (this.name.toLowerCase().includes(searchFor) ||
             this.position.toLowerCase().includes(searchFor) ||
-            this.team.toLowerCase().includes(searchFor)
+            this.team.toLowerCase().includes(searchFor)){
+                return true;
+            }
     }
 }
 
@@ -28,6 +29,7 @@ let players = await fetchPlayers()
 
 searchPlayer.addEventListener("input", function () {
     const searchFor = searchPlayer.value.toLowerCase()
+    console.log(searchPlayer.value.toLowerCase());
     for (let i = 0; i < players.length; i++) { // TODO add a matches function
         if (players[i].matches(searchFor)) {
             players[i].visible = true
