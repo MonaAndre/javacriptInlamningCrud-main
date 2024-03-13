@@ -3,6 +3,8 @@ const allPlayersTBody = document.querySelector("#allPlayers tbody")
 const searchPlayer = document.getElementById("searchPlayer")
 const btnAdd = document.getElementById("btnAdd")
 const closeDialog = document.getElementById("closeDialog")
+const playersName = document.getElementById("playerName")
+const error = document.getElementById("player-name-error")
 
 
 function Player(id, name, jersey, team, position) {
@@ -59,7 +61,7 @@ const onClickPlayer = function (event) {
     const htmlElementetSomViHarKlickatPa = event.target
     console.log(htmlElementetSomViHarKlickatPa.dataset.stefansplayerid)
     const playerId = parseInt(htmlElementetSomViHarKlickatPa.dataset.stefansplayerid);
-    const player = players.find(p => p.id === playerId)
+    const player = players.find(p => p.id == playerId)
     playerName.value = player.name
     jersey.value = player.jersey
     position.value = player.position
@@ -165,11 +167,7 @@ const updateTable = function () {
 }
 
 
-
-
 updateTable()
-
-
 
 
 
@@ -187,7 +185,13 @@ MicroModal.init({
     debugMode: true // [10]
 });
 
-
+playersName.addEventListener("input",()=>{
+    if(validator.isAlphanumeric(playersName.value, 'sv-SE') && validator.isLength(playersName.value, {min:3, max:25})){
+        error.style.display="none";
+    }else{
+        error.style.display="block";
+    }
+    })
 
 
 

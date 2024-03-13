@@ -83,14 +83,15 @@
                 <span class="error" id="player-name-error">Felaktigt namn, minst 3 tecken!</span>
               <label>Jersey</label>
               <input type="number" name="jersey" id="jersey" placeholder="" aria-label="Jersey" required />
-              <span class="error" id="jersey-error">Felaktigt jersey, bara siffror!</span>
+              <span class="error" id="jersey-error">Felaktigt namn, minst 3 tecken!</span>
               <label>Position</label>
               <select name="position" id="position" placeholder="" aria-label="position" required>
-                <option>Goalie</option>
-                <option>Defence</option>
-                <option>Forward</option>
+                <option selected value="Goalie">Goalie</option>
+                <option value="Defence">Defence</option>
+                <option value="Forward">Forward</option>
               </select>
-              <span class="error" id="position-error">Felaktigt position: position kan väljas mellan goalie/defence/forward!</span>
+              
+              
 
 
             </p>
@@ -111,7 +112,7 @@
 
 
 
-
+  <script src="https://unpkg.com/validator@latest/validator.min.js"></script>
   <script src="https://unpkg.com/micromodal/dist/micromodal.min.js"></script>
   <script type="module" src="script.js"></script>
 </body>
