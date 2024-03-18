@@ -16,8 +16,9 @@ let currentSortCol = ""
 let currentSortOrder = ""
 let currentQ = ""
 let currentPageNo = 1
-let currentPageSize = 10
+let currentPageSize = 5
 let players = []
+
 function Player(id, name, jersey, position) {
     this.id = id
     this.name = name
@@ -31,17 +32,35 @@ function Player(id, name, jersey, position) {
             return true;
         }
     }
+
 }
 
 const onClickPlayer = function (event) {
     const htmlElementetSomViHarKlickatPa = event.target
     const playerId = parseInt(htmlElementetSomViHarKlickatPa.dataset.stefansplayerid);
     const player = players.result.find(p => p.id == playerId)
-    playerName.value = player.name
+    playersName.value = player.name
     jersey.value = player.jersey
     position.value = player.position
     editingPlayer = player
     MicroModal.show('modal-1');
+}
+
+const deletePlayer = async function (event) {
+    const htmlElementetSomViHarKlickatPa = event.target
+    const playerId = parseInt(htmlElementetSomViHarKlickatPa.dataset.stefansplayerid);
+    let url = `http://localhost:3000/api/players/${playerId}`
+    let method = "delete"
+
+    let response = await fetch(url, {
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        method: method,
+        body: JSON.stringify()
+    })
+    refresh()
 }
 
 pageNo.addEventListener("input", () => {
@@ -128,12 +147,18 @@ async function refresh() {
 
         let td = document.createElement("td")
         let btn = document.createElement("button")
+        let deletePlayerBtn = document.createElement("button")
+        deletePlayerBtn.textContent = "DELETE"
+        deletePlayerBtn.setAttribute("method", "delete")
+        deletePlayerBtn.dataset.stefansplayerid = player.id
         btn.textContent = "EDIT"
         btn.dataset.stefansplayerid = player.id
         td.appendChild(btn)
+        td.appendChild(deletePlayerBtn)
         tr.appendChild(td)
 
         btn.addEventListener("click", onClickPlayer);
+        deletePlayerBtn.addEventListener("click", deletePlayer)
         tbody.appendChild(tr)
     })
     createPager(players.total, currentPageNo, currentPageSize)
@@ -222,12 +247,16 @@ MicroModal.init({
 });
 
 playersName.addEventListener("input", () => {
-    if (validator.isAlphanumeric(playersName.value, 'sv-SE') && validator.isLength(playersName.value, { min: 3, max: 25 })) {
+    const inputValue = playersName.value.trim();
+    const name = inputValue.split(' ');
+
+    if (name.length >= 1 && name.every(name => validator.isLength(name, { min: 2, max: 25 }))) {
         error.style.display = "none";
     } else {
         error.style.display = "block";
     }
-})
+});
+
 
 
 
