@@ -1,48 +1,163 @@
-
 const allPlayersTBody = document.querySelector("#allPlayers tbody")
 const searchPlayer = document.getElementById("searchPlayer")
 const btnAdd = document.getElementById("btnAdd")
 const closeDialog = document.getElementById("closeDialog")
 const playersName = document.getElementById("playerName")
+const jersey = document.getElementById("jersey")
+const position = document.getElementById("position")
 const error = document.getElementById("player-name-error")
 
+const tbody = document.getElementById("tbody")
+const allSortLinks = document.getElementsByClassName('bi')
+const pager = document.getElementById('pager')
+const pageNo = document.getElementById('pageNo')
 
-function Player(id, name, jersey, team, position) {
+let currentSortCol = ""
+let currentSortOrder = ""
+let currentQ = ""
+let currentPageNo = 1
+let currentPageSize = 10
+let players = []
+function Player(id, name, jersey, position) {
     this.id = id
     this.name = name
     this.jersey = jersey
-    this.team = team
     this.position = position
     this.visible = true
     this.matches = function (searchFor) {
         if (this.name.toLowerCase().includes(searchFor) ||
             this.position.toLowerCase().includes(searchFor) ||
-            this.team.toLowerCase().includes(searchFor)){
-                return true;
-            }
+            this.team.toLowerCase().includes(searchFor)) {
+            return true;
+        }
     }
 }
 
-async function fetchPlayers() {
-    return await ((await fetch('http://localhost:3000/api/players')).json())
+const onClickPlayer = function (event) {
+    const htmlElementetSomViHarKlickatPa = event.target
+    const playerId = parseInt(htmlElementetSomViHarKlickatPa.dataset.stefansplayerid);
+    const player = players.result.find(p => p.id == playerId)
+    playerName.value = player.name
+    jersey.value = player.jersey
+    position.value = player.position
+    editingPlayer = player
+    MicroModal.show('modal-1');
 }
 
-let players = await fetchPlayers()
+pageNo.addEventListener("input", () => {
+    currentPageNo = Number(pageNo.value)
+    refresh()
+})
+
+Object.values(allSortLinks).forEach(link => {
+    link.addEventListener("click", () => {
+        currentSortCol = link.dataset.sortcol
+        currentSortOrder = link.dataset.sortorder
+        refresh()
+    })
+})
+
+function debounce(cb, delay = 250) {
+    let timeout
+
+    return (...args) => {
+        clearTimeout(timeout)
+        timeout = setTimeout(() => {
+            cb(...args)
+        }, delay)
+    }
+}
+
+const updateQuery = debounce(query => {
+    currentQ = query
+    refresh()
+}, 500)
+
+searchPlayer.addEventListener("input", (e) => {
+    updateQuery(e.target.value)
+})
+
+function createPager(count, pageNo, currentPageSize) {
+    pager.innerHTML = ""
+    let totalPages = Math.ceil(count / currentPageSize)
+    for (let i = 1; i <= totalPages; i++) {
+        const li = document.createElement('li')
+        li.classList.add("page-item")
+        if (i == pageNo) {
+            li.classList.add("active")
+        }
+        const a = document.createElement('a')
+        a.href = "#"
+        a.innerText = i
+        a.classList.add("page-link")
+        li.appendChild(a)
+        a.addEventListener("click", () => {
+
+            currentPageNo = i
+            refresh()
+        })
+        pager.appendChild(li)
+    }
+}
+
+function createTd(data) {
+    let element = document.createElement("td")
+    element.innerText = data
+    return element
+}
+
+async function refresh() {
+    let offset = (currentPageNo - 1) * currentPageSize
+
+    let url = `http://localhost:3000/api/players?sortCol=${currentSortCol}&sortOrder=${currentSortOrder}&limit=${currentPageSize}&offset=${offset}&q=${currentQ}`;
+
+    const response = await fetch(url, {
+        headers: {
+            'Accept': 'application/json'
+        }
+    });
+
+    players = await response.json()
+    tbody.innerHTML = ""
+    players.result.forEach(player => {
+        const tr = document.createElement("tr")
+
+        tr.appendChild(createTd(player.name))
+        tr.appendChild(createTd(player.jersey))
+        tr.appendChild(createTd(player.position))
+
+        let td = document.createElement("td")
+        let btn = document.createElement("button")
+        btn.textContent = "EDIT"
+        btn.dataset.stefansplayerid = player.id
+        td.appendChild(btn)
+        tr.appendChild(td)
+
+        btn.addEventListener("click", onClickPlayer);
+        tbody.appendChild(tr)
+    })
+    createPager(players.total, currentPageNo, currentPageSize)
+}
+
+await refresh()
+
+async function fetchPlayers() {
+    return await ((await fetch("http://localhost:3000/api/players")).json())
+}
 
 searchPlayer.addEventListener("input", function () {
     const searchFor = searchPlayer.value.toLowerCase()
-    console.log(searchPlayer.value.toLowerCase());
-    for (let i = 0; i < players.length; i++) { // TODO add a matches function
+
+    for (let i = 0; i < players.length; i++) {
         if (players[i].matches(searchFor)) {
             players[i].visible = true
         } else {
             players[i].visible = false
         }
     }
-    updateTable()
+    refresh()
 
 });
-
 
 const createTableTdOrTh = function (elementType, innerText) {
     let element = document.createElement(elementType)
@@ -50,34 +165,14 @@ const createTableTdOrTh = function (elementType, innerText) {
     return element
 }
 
-
-const playerName = document.getElementById("playerName")
-const jersey = document.getElementById("jersey")
-const position = document.getElementById("position")
-
 let editingPlayer = null
-
-const onClickPlayer = function (event) {
-    const htmlElementetSomViHarKlickatPa = event.target
-    console.log(htmlElementetSomViHarKlickatPa.dataset.stefansplayerid)
-    const playerId = parseInt(htmlElementetSomViHarKlickatPa.dataset.stefansplayerid);
-    const player = players.find(p => p.id == playerId)
-    playerName.value = player.name
-    jersey.value = player.jersey
-    position.value = player.position
-    editingPlayer = player
-
-    MicroModal.show('modal-1');
-
-}
 
 closeDialog.addEventListener("click", async (ev) => {
     ev.preventDefault()
     let url = ""
     let method = ""
-    console.log(url)
     let o = {
-        "name": playerName.value,
+        "name": playersName.value,
         "jersey": jersey.value,
         "position": position.value
     }
@@ -99,99 +194,41 @@ closeDialog.addEventListener("click", async (ev) => {
         method: method,
         body: JSON.stringify(o)
     })
-    console.log(response);
 
-    // let json = await response.json()
-    players = await fetchPlayers()
-    updateTable()
+    refresh()
     MicroModal.close('modal-1');
 })
 
 btnAdd.addEventListener("click", () => {
-    playerName.value = ""
+    playersName.value = ""
     jersey.value = 0
     position.value = ""
     editingPlayer = null
-
     MicroModal.show('modal-1');
-
 })
 
-
-const updateTable = function () {
-    // while(allPlayersTBody.firstChild)
-    //     allPlayersTBody.firstChild.remove()
-    allPlayersTBody.innerHTML = ""
-
-    // först ta bort alla children
-    for (let i = 0; i < players.length; i++) { // hrmmm you do foreach if you'd like, much nicer! 
-        if (players[i].visible == false) {
-            continue
-        }
-        let tr = document.createElement("tr")
-
-        tr.appendChild(createTableTdOrTh("th", players[i].name))
-        tr.appendChild(createTableTdOrTh("td", players[i].jersey))
-        tr.appendChild(createTableTdOrTh("td", players[i].position))
-        tr.appendChild(createTableTdOrTh("td", players[i].team))
-
-        let td = document.createElement("td")
-        let btn = document.createElement("button")
-        btn.textContent = "EDIT"
-        btn.dataset.stefansplayerid = players[i].id
-        td.appendChild(btn)
-        tr.appendChild(td)
-
-
-        btn.addEventListener("click", onClickPlayer);
-
-        // btn.addEventListener("click",function(){
-        //       alert(players[i].name)  
-        //       //                      detta funkar fast med sk closures = magi vg
-        // })
-
-
-        allPlayersTBody.appendChild(tr)
-    }
-
-    // innerHTML och backticks `
-    // Problem - aldrig bra att bygga strängar som innehåller/kan innehålla html
-    //    injection
-    // for(let i = 0; i < players.length;i++) { // hrmmm you do foreach if you'd like, much nicer! 
-    //                                         // I will show you in two weeks
-    //                                         //  or for p of players     
-    //     let trText = `<tr><th scope="row">${players[i].name}</th><td>${players[i].jersey}</td><td>${players[i].position}</td><td>${players[i].team}</td></tr>`
-    //     allPlayersTBody.innerHTML += trText
-    // }
-    // createElement
-}
-
-
-updateTable()
-
-
-
 MicroModal.init({
-    onShow: modal => console.info(`${modal.id} is shown`), // [1]
-    onClose: modal => console.info(`${modal.id} is hidden`), // [2]
+    onShow: modal => console.info(`${modal.id} is shown`),
+    onClose: modal => console.info(`${modal.id} is hidden`),
 
-    openTrigger: 'data-custom-open', // [3]
-    closeTrigger: 'data-custom-close', // [4]
-    openClass: 'is-open', // [5]
-    disableScroll: true, // [6]
-    disableFocus: false, // [7]
-    awaitOpenAnimation: false, // [8]
-    awaitCloseAnimation: false, // [9]
-    debugMode: true // [10]
+    openTrigger: 'data-custom-open',
+    closeTrigger: 'data-custom-close',
+    openClass: 'is-open',
+    disableScroll: true,
+    disableFocus: false,
+    awaitOpenAnimation: false,
+    awaitCloseAnimation: false,
+    debugMode: true
 });
 
-playersName.addEventListener("input",()=>{
-    if(validator.isAlphanumeric(playersName.value, 'sv-SE') && validator.isLength(playersName.value, {min:3, max:25})){
-        error.style.display="none";
-    }else{
-        error.style.display="block";
+playersName.addEventListener("input", () => {
+    if (validator.isAlphanumeric(playersName.value, 'sv-SE') && validator.isLength(playersName.value, { min: 3, max: 25 })) {
+        error.style.display = "none";
+    } else {
+        error.style.display = "block";
     }
-    })
+})
+
 
 
 
